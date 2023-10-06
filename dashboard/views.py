@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from dashboard.models import MQTTData
 from django.http import HttpResponse,JsonResponse
-from .mqtt_utils import subscribe_to_hivemq
+from .mqtt_utils import subscribe_to_hivemq, publish_to_hivemq, mqtt_data
 import threading
 
 # Create your views here.
@@ -10,14 +10,18 @@ def start_hivemq_subscription(request):
     subscribe_thread.start()
     return HttpResponse("HiveMQ subscription started successfully")
 
-# def last_mqtt_data(request):
-#     # Ambil data terakhir dari model MQTTData
-#     latest_data = MQTTData.objects.latest('timestamp')
-#     # Render template dengan data terakhir
-#     return render(request, 'last_mqtt_data.html', {'latest_data': latest_data})
+def publish_message(request):
+    # Panggil fungsi publish_to_hivemq dengan parameter yang sesuai
+    publish_to_hivemq('warning', 'warning')
+    return HttpResponse("asu asu")
 
 def dashboard(request):
     return render(request, 'dashboard.html')
+
+def get_status(request):
+    status = "Server is online" if mqtt_data.data['current'] != 0 else "Server is offline"
+    response_data = {'status': status}
+    return JsonResponse(response_data)
 
 
 def get_dashboard_data(request):

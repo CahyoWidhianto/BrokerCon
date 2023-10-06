@@ -4,6 +4,7 @@ from dashboard.models import MQTTData
 from django.db import transaction
 import time
 import json
+from django.http import JsonResponse
 
 class MyMQTTData:
     def __init__(self):
@@ -29,20 +30,32 @@ class MyMQTTData:
         mqtt_data.save()
 
 mqtt_data = MyMQTTData()  # Gunakan kelas MyMQTTData
-mqtt_loop_active = True
 def on_message(client, userdata, message):
     topic = message.topic
     payload = message.payload.decode()
     
     mqtt_data.update(topic, payload)
     print(f"Received message on topic '{topic}': {payload}")
-    # Jika ada data untuk topik, simpan ke dalam database
-    if all(value is not None for value in mqtt_data.data.values()):
-        mqtt_data.save()
-        time.sleep(.5)
-        client.loop_stop()
-        
+    if mqtt_data.data['current'] == 0:
+        status = {"status": "Server is offline"}
+    else:
+        if all(value is not None for value in mqtt_data.data.values()):
+            mqtt_data.save()
+            # time.sleep(.5)
+            client.loop_stop()
+            status = {"status": "Server is online"}
+    print(status)
+    response_data = json.dumps(status)
+    return JsonResponse(response_data, safe=False)
+    # publish_to_hivemq('status', status)
     
+    # if mqtt_data.data['current'] != 0:
+    # # Jika ada data untuk topik, simpan ke dalam database
+    #     if all(value is not None for value in mqtt_data.data.values()):
+    #         mqtt_data.save()
+    #         time.sleep(.5)
+    #         client.loop_stop()
+        
 
 def subscribe_to_hivemq():
     client = mqtt.Client()
@@ -67,5 +80,26 @@ def subscribe_to_hivemq():
     # Mulai loop untuk mendengarkan pesan
     # client.loop_forever()
     client.loop_start()
+    
+
+def publish_to_hivemq(topic, message):
+    # Buat klien MQTT
+    client = mqtt.Client()
+
+    # Konfigurasi TLS jika diperlukan (pastikan Anda memiliki sertifikat TLS)
+    sslContext = ssl.create_default_context()
+    client.tls_set_context(sslContext)
+
+    # Konfigurasi otentikasi jika diperlukan (ganti dengan informasi otentikasi Anda)
+    client.username_pw_set(username='RamaPMPD', password='Kerasakti123')
+
+    # Hubungkan ke broker HiveMQ (ganti dengan alamat host dan port HiveMQ yang sesuai)
+    client.connect('b5208bedc9794c2397ead6f7870bb494.s1.eu.hivemq.cloud', port=8883)
+
+    # Publish pesan ke topik tertentu
+    client.publish(topic, message)
+
+    # Menunggu pesan diproses dan kemudian menutup koneksi dengan broker
+    client.loop_forever()
 
     

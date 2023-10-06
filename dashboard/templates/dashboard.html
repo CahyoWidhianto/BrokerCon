@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="refresh" content="4">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Arbutus+Slab" /> {% load static %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.1.0/paho-mqtt.min.js"></script>
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />
 
@@ -145,6 +146,7 @@
                     </div>
                 </div>
             </div>
+            <div id="status">{{ status }}</div>
         </div>
     </div>
 
