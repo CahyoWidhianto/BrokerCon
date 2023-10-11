@@ -4,7 +4,8 @@ from dashboard.models import MQTTData
 from django.db import transaction
 import time
 import json
-from django.http import JsonResponse
+import paho.mqtt.subscribe as subscribe
+
 
 class MyMQTTData:
     def __init__(self):
@@ -45,8 +46,7 @@ def on_message(client, userdata, message):
             client.loop_stop()
             status = {"status": "Server is online"}
     print(status)
-    response_data = json.dumps(status)
-    return JsonResponse(response_data, safe=False)
+
     # publish_to_hivemq('status', status)
     
     # if mqtt_data.data['current'] != 0:
@@ -102,4 +102,23 @@ def publish_to_hivemq(topic, message):
     # Menunggu pesan diproses dan kemudian menutup koneksi dengan broker
     client.loop_forever()
 
+
+def subs_baru():
+    username = "RamaPMPD"
+    password = "Kerasakti123"
+    host = "b5208bedc9794c2397ead6f7870bb494.s1.eu.hivemq.cloud"
+    port = 8883
+    topic = "dataSensor"
+    # Subscribe to the specified topic using subscribe.simple()
+    msg = subscribe.simple(
+        topic,
+        hostname=host,
+        port=port,
+        auth={"username": username, "password": password},
+        tls={"ca_certs": None, "certfile": None, "keyfile": None},
+    )
+    
+    mqtt_data = MyMQTTData()
+    
+    mqtt_data.update(payload=msg.payload.decode())
     

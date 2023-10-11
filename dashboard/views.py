@@ -10,11 +10,6 @@ def start_hivemq_subscription(request):
     subscribe_thread.start()
     return HttpResponse("HiveMQ subscription started successfully")
 
-def publish_message(request):
-    # Panggil fungsi publish_to_hivemq dengan parameter yang sesuai
-    publish_to_hivemq('warning', 'warning')
-    return HttpResponse("asu asu")
-
 def dashboard(request):
     return render(request, 'dashboard.html')
 
@@ -29,10 +24,10 @@ def get_dashboard_data(request):
     subscribe_thread = threading.Thread(target=subscribe_to_hivemq)
     subscribe_thread.start()
     
-    # Get dashboard data from sensor record database
-    #ketika arus != 0 data di harapkan di save ke dalam database, namun jika current bernilai 0 diharapkan proses add data berhenti
-    
     data_sensor = MQTTData.objects.order_by("-pk")[0]
+    if data_sensor.current > 0.1:
+        # Jika 'current' melebihi 1.0, maka kirim pesan 'warning'
+        publish_message(request)
     # print(data_sensor.temperature, data_sensor.current)
     sensorValue = {
         "currentValue" : data_sensor.current,
@@ -41,4 +36,9 @@ def get_dashboard_data(request):
     }
     # print(sensorValue)
     return JsonResponse(sensorValue)
+
+def publish_message(request):
+    # Panggil fungsi publish_to_hivemq dengan parameter yang sesuai
+    publish_to_hivemq('warning', 'warning')
+    return HttpResponse("asu asu")
 
